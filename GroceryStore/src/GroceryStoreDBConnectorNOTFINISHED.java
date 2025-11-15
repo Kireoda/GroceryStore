@@ -3,6 +3,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement; // added for trigger creation
 
 //Setup Instructions
 //1. Database Setup - Ensure you have a database instance running (e.g., MySQL or MariaDB) and you have:
@@ -34,6 +35,9 @@ public class GroceryStoreDBConnectorNOTFINISHED {
 
         try (Connection conn = DriverManager.getConnection(DB_URL, USER, PASS)) {
             System.out.println("Connection successful to: " + DB_URL);
+
+            // --- 1. Create / refresh triggers for auditing and constraints ---
+            createTriggers(conn);
 
             // --- 2. Demonstrating a Basic Query (Row-by-Row Processing) ---
             System.out.println("\n--- 🛒 Product Inventory Check ---");
@@ -133,6 +137,63 @@ public class GroceryStoreDBConnectorNOTFINISHED {
             if (rowsAffected > 0) {
                 System.out.println("Successfully inserted new customer: " + name);
             }
+        }
+    }
+
+    /**
+     * Creates at least two triggers:
+     * 1) Auditing trigger for employee wage changes.
+     * 2) Constraint trigger to prevent negative product stock.
+     **/
+    public static void createTriggers(Connection conn) throws SQLException {
+        try (Statement stmt = conn.createStatement()) {
+
+            // Table for auditing wage changes (if it doesn't already exist)
+            String createAuditTable =
+                    "CREATE TABLE IF NOT EXISTS employee_wage_audit (" +
+                            "  audit_id INT AUTO_INCREMENT PRIMARY KEY," +
+                            "  employee_id VARCHAR(10) NOT NULL," +
+                            "  old_wage DECIMAL(10,2)," +
+                            "  new_wage DECIMAL(10,2)," +
+                            "  changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
+                            ")";
+
+            // Trigger 1: auditing wage changes on employee
+            String dropWageTrigger = "DROP TRIGGER IF EXISTS employee_wage_audit_trg";
+
+            String createWageTrigger =
+                    "CREATE TRIGGER employee_wage_audit_trg " +
+                            "AFTER UPDATE ON employee " +
+                            "FOR EACH ROW " +
+                            "BEGIN " +
+                            "   IF NEW.wage <> OLD.wage THEN " +
+                            "       INSERT INTO employee_wage_audit (employee_id, old_wage, new_wage) " +
+                            "       VALUES (OLD.employee_id, OLD.wage, NEW.wage); " +
+                            "   END IF; " +
+                            "END";
+
+            // Trigger 2: prevent negative stock on product
+            String dropStockTrigger = "DROP TRIGGER IF EXISTS product_prevent_negative_stock_trg";
+
+            String createStockTrigger =
+                    "CREATE TRIGGER product_prevent_negative_stock_trg " +
+                            "BEFORE UPDATE ON product " +
+                            "FOR EACH ROW " +
+                            "BEGIN " +
+                            "   IF NEW.stock < 0 THEN " +
+                            "       SIGNAL SQLSTATE '45000' " +
+                            "       SET MESSAGE_TEXT = 'Stock level cannot be negative.'; " +
+                            "   END IF; " +
+                            "END";
+
+            // Execute in order
+            stmt.executeUpdate(createAuditTable);
+            stmt.executeUpdate(dropWageTrigger);
+            stmt.executeUpdate(dropStockTrigger);
+            stmt.executeUpdate(createWageTrigger);
+            stmt.executeUpdate(createStockTrigger);
+
+            System.out.println("Triggers created: employee_wage_audit_trg, product_prevent_negative_stock_trg");
         }
     }
 }
