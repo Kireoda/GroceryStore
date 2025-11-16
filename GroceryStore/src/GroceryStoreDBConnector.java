@@ -5,26 +5,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement; // added for trigger creation
 
-//Setup Instructions
-//1. Database Setup - Ensure you have a database instance running (e.g., MySQL or MariaDB) and you have:
-//Created a database named grocery_db (or updated the DB_URL).
-//Run your Grocery Store Database.sql script against this database to create the tables and populate the initial data.
-//Updated the USER and PASS variables in the Java file with your correct database credentials.
-//2. Add the JDBC Connector - You need the MySQL Connector/J JAR file in your project's classpath:
-//Maven/Gradle: If you are using a build tool, add the dependency for mysql-connector-java.
-//Plain Java (CLI/IDE): Download the JAR file and ensure it is included when you compile and run your Java file.
-//Why Prepared Statements? Prepared Statements are a critical security feature because they automatically handle SQL injection prevention. They also offer better performance when executing the same statement multiple times, as the database only needs to compile the query once.
-
-public class GroceryStoreDBConnectorNOTFINISHED {
+public class GroceryStoreDBConnector {
 
     // 1. Database Connection Parameters
-    // NOTE: You must change these details to match your actual database setup.
     private static final String DB_URL = "jdbc:mysql://localhost:3306/grocery_db";
     private static final String USER = "your_db_username"; // e.g., "root"
     private static final String PASS = "your_db_password"; // e.g., "password123"
 
     public static void main(String[] args) {
-        // Load the JDBC Driver (optional for modern Java, but good practice)
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
         } catch (ClassNotFoundException e) {
@@ -140,8 +128,17 @@ public class GroceryStoreDBConnectorNOTFINISHED {
         }
     }
 
+    public static void deleteCustomer(Connection conn, String id) throws SQLException {
+        String sql = "DELETE FROM customer WHERE customer_id = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, id);
+            int rows = pstmt.executeUpdate();
+            System.out.println("Deleted rows: " + rows);
+        }
+    }
+
+
     /**
-     * Creates at least two triggers:
      * 1) Auditing trigger for employee wage changes.
      * 2) Constraint trigger to prevent negative product stock.
      **/
