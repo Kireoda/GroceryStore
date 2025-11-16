@@ -9,8 +9,8 @@ public class GroceryStoreDBConnector {
 
     // 1. Database Connection Parameters
     private static final String DB_URL = "jdbc:mysql://localhost:3306/grocery_db";
-    private static final String USER = "your_db_username"; // e.g., "root"
-    private static final String PASS = "your_db_password"; // e.g., "password123"
+    private static final String USER = "root";
+    private static final String PASS = "";
 
     public static void main(String[] args) {
         try {
@@ -28,18 +28,18 @@ public class GroceryStoreDBConnector {
             createTriggers(conn);
 
             // --- 2. Demonstrating a Basic Query (Row-by-Row Processing) ---
-            System.out.println("\n--- 🛒 Product Inventory Check ---");
+            System.out.println("\n--- Product Inventory Check ---");
             fetchProductData(conn);
 
             // --- 3. Demonstrating a Prepared Statement (Update) ---
-            System.out.println("\n--- 🧑‍💻 Employee Update using PreparedStatement ---");
+            System.out.println("\n--- Employee Update using PreparedStatement ---");
             updateEmployeeWage(conn, "3", 17.50); // Update employee '3' (bob) to 17.50
 
             // Re-verify the update (optional)
             fetchEmployeeData(conn, "3");
 
             // --- 4. Demonstrating a Prepared Statement (Insert) ---
-            System.out.println("\n--- 📝 Inserting a New Customer using PreparedStatement ---");
+            System.out.println("\n--- Inserting a New Customer using PreparedStatement ---");
             insertNewCustomer(conn, "6", "Lisa Smith", 28, "0891234567", "lisa.smith@example.com");
 
         } catch (SQLException e) {
